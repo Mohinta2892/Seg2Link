@@ -9,3 +9,4 @@ napari~=0.4.10
 seg2link~=0.1.0
 setuptools~=60.5.0
 pydantic<2
+napari-sam~=0.4.13
