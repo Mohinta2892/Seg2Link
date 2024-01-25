@@ -49,6 +49,8 @@ class Seg2LinkPara:
     key_separate: str = 'k'
     key_insert: str = 'i'
     key_switch_one_label_all_labels: str = 'q'
+    key_switch_all_labels: str = 'o'
+    key_switch_more_labels: str = 'p'
     key_online_help: str = 'h'
 
     @property
