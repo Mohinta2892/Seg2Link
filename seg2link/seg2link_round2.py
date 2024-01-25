@@ -52,6 +52,8 @@ class Seg2LinkR2:
         self.update_cmap()
         self.layer_selected = 0
         self.message_delete_labels = message_delete_labels
+        self.original_labels = labels
+
 
     def _update_segmentation(self):
         self.vis.update_segmentation_r2()
@@ -396,12 +398,37 @@ class Seg2LinkR2:
             self._update_segmentation()
             self.update_info()
 
+
         @viewer_seg.bind_key(parameters.pars.key_switch_one_label_all_labels)
         @print_information("Switch showing one label/all labels")
         def switch_showing_one_or_all_labels(viewer_seg):
             """Show the selected label"""
             self.vis.viewer.layers["segmentation"].show_selected_label = \
                 not self.vis.viewer.layers["segmentation"].show_selected_label
+
+        @viewer_seg.bind_key(parameters.pars.key_switch_more_labels)
+        @print_information("Switch showing more than one label")
+        def switch_showing_more_labels(viewer_seg):
+            """Show more than one selected label"""
+
+            # 1st grab all selected labels, then find those labels in the big array, overwrite the display with only those labels,
+            # toggle will allow you to switch between one or more selected labels or the whole labelled array
+            print(self.label_list)
+            print(f"show_selected_label: {self.vis.viewer.layers['segmentation'].show_selected_label}")
+            picked_labels = np.zeros_like(self.vis.viewer.layers["segmentation"].data)
+            original_labels = self.vis.viewer.layers["segmentation"].data
+            for pl in self.label_list:
+                picked_labels[self.vis.viewer.layers["segmentation"].data == pl] = pl
+
+            # print(f"picked_labels : {np.where(picked_labels > 0)}")
+
+            if len(self.label_list):
+                self.vis.viewer.layers["segmentation"].data = picked_labels
+
+        @viewer_seg.bind_key(parameters.pars.key_switch_all_labels)
+        @print_information("Switch showing all labels")
+        def switch_showing_all_labels(viewer_seg):
+            self.vis.viewer.layers["segmentation"].data = self.original_labels
 
         @viewer_seg.bind_key(parameters.pars.key_online_help)
         def help(viewer_seg):
