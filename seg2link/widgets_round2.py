@@ -43,6 +43,8 @@ class WidgetsR2:
                                   '\n[I]: Insert a new label' \
                                   '\n---------------' \
                                   '\n[Q]: Switch: Viewing one label | all labels' \
+                                  '\n[P]: Switch: Viewing more than one picked label' \
+                                  '\n[O]: Switch: Viewing all labels' \
                                   '\n[U]: Undo     [F]: Redo' \
                                   '\n[L]:  Picker   [E]: Eraser   [P]: Painter' \
                                   '\n[H]: Online Help'
