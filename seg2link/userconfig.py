@@ -6,9 +6,27 @@ from magicgui import use_app
 from magicgui.types import FileDialogMode
 
 from seg2link import parameters
+import os
+import glob
 
 CURRENT_DIR = Path.home()
 CONFIG_PATH_FILE = Path.home() / ".seg2link_config_path.ini"
+
+
+def get_last_current_base_dir(CONFIG_DIR):
+    """Grabs and shows as default paths the last directory based on config files if saved."""
+    config_ = ConfigParser()
+    seg2link_configs = glob.glob(f"{CONFIG_DIR}/*.ini")
+    if not len(seg2link_configs):
+        raise ValueError(f"There are no config files saved in {CONFIG_DIR}.")
+
+    seg2link_configs.sort(key=os.path.getmtime)  # sort files based on last modified
+    last_config = Path(seg2link_configs[-1])  # grab the last modified file
+    config_.read(last_config)
+
+    global CURRENT_DIR
+    CURRENT_DIR = Path(os.path.dirname(config_["parameters_r1r2"]["path_cells"]))
+    return CURRENT_DIR
 
 
 def get_config_dir():

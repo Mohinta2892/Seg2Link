@@ -10,14 +10,18 @@ from seg2link import parameters
 from seg2link.start_round1 import load_cells, load_mask, _npy_name, check_existence_path, show_error_msg, set_pars_r1r2, \
     check_tiff_existence
 from seg2link.seg2link_round2 import Seg2LinkR2
-from seg2link.userconfig import UserConfig, get_config_dir
+from seg2link.userconfig import UserConfig, get_config_dir, get_last_current_base_dir
 
 try:
     CONFIG_DIR = get_config_dir()
 except Exception:
     CONFIG_DIR = Path.home()
 
-CURRENT_DIR = Path.home()
+try:
+    CURRENT_DIR = get_last_current_base_dir(CONFIG_DIR)
+except Exception:
+    CURRENT_DIR = Path.home()
+
 USR_CONFIG = UserConfig()
 
 
