@@ -31,29 +31,34 @@ These predictions can conveniently be generated using [Seg2linkUnet2d](https://g
   or [Miniconda](https://conda.io/miniconda.html)
 - Create a new conda environment and activate it by:
 ```console
-$ conda create -n seg2link-env python=3.8 pip
-$ conda activate seg2link-env
+conda create -n seg2link-env python=3.8 pip
+conda activate seg2link-env
 ```
 - Install seg2link:
 ```console
-$ pip install seg2link
+pip install seg2link
 ```
 - Update to the latest version:
 ```console
-$ pip install --upgrade seg2link
+pip install --upgrade seg2link
 ```
 
 ## Use the software
 - Activate the created environment by:
 ```console
-$ conda activate seg2link-env
+conda activate seg2link-env
 ```
 - Start the software
 ```console
-$ seg2link
+seg2link
 ```
 
 ## Citation
 If you used this package in your research please cite it:
 
 - Wen, C., Matsumoto, M., Sawada, M. et al. Seg2Link: an efficient and versatile solution for semi-automatic cell segmentation in 3D image stacks. _Sci Rep_ **13**, 7109 (2023). https://doi.org/10.1038/s41598-023-34232-6
+
+If you use this fork in your research, we would be grateful if you acknowledge it:
+- Mohinta, S. https://github.com/Mohinta2892/Seg2Link.git
+
+
