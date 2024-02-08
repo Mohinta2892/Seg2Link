@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import dask
 import tifffile
@@ -49,6 +50,10 @@ def split_zarr_and_save_tiffs(zarr_path, output_folder, seg_ds=None):
 def _split(zarr_array, output_folder, ds):
     # Ensure the output folder exists
     output_folder = Path(f"{output_folder}/{os.path.basename(ds)}")
+    # always remove existing data
+    if os.path.exists(output_folder):
+        shutil.rmtree(output_folder)
+
     output_folder.mkdir(parents=True, exist_ok=True)
 
     # Get the shape of the Zarr array
