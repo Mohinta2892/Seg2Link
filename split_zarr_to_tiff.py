@@ -57,7 +57,9 @@ def _split(zarr_array, output_folder, ds):
     # Iterate over the Z dimension and save each slice as a TIFF
     for z_index in range(shape_zarr[0]):
         # Extract the Z slice
-        z_slice = zarr_array[z_index, ...].astype(np.uint16)
+        z_slice = zarr_array[z_index, ...]
+        if z_slice.dtype not in [np.uint16, np.uint8]:
+            z_slice = z_slice.astype(np.uint16)
 
         # Save the Z slice as a TIFF
         tiff_filename = output_folder / f"slice_{z_index}.tiff"
