@@ -15,6 +15,9 @@ from scipy.ndimage import grey_dilation, grey_closing, binary_fill_holes, binary
 from skimage.segmentation import relabel_sequential
 from dask import delayed
 import dask.array as da
+import zarr
+import h5py
+from tifffile import tifffile
 
 from seg2link.parameters import DEBUG
 from seg2link import parameters
@@ -22,15 +25,84 @@ from seg2link import parameters
 if parameters.DEBUG:
     pass
 
+
+def list_keys(f):
+    """
+    List all keys in a zarr/hdf file
+    Args:
+        path: path to the zarr/hdf file
+
+    Returns:
+        list of keys
+    """
+
+    def _recursive_find_keys(f, base: Path = Path('/')):
+        _list_keys = []
+        for key, dataset in f.items():
+            if isinstance(dataset, zarr.Group):
+                new_base = base / key
+                _list_keys += _recursive_find_keys(dataset, new_base)
+
+            elif isinstance(dataset, h5py._hl.group.Group):
+                new_base = base / key
+                _list_keys += _recursive_find_keys(dataset, new_base)
+
+            elif isinstance(dataset, zarr.Array):
+                new_key = str(base / key)
+                _list_keys.append(new_key)
+
+            elif isinstance(dataset, h5py._hl.dataset.Dataset):
+                new_key = str(base / key)
+                _list_keys.append(new_key)
+
+        return _list_keys
+
+    return _recursive_find_keys(f)
+
+
+def load_zarr(path: Path, mode='r') -> ndarray or None:
+    # TODO: n5 behavior has not been tested
+    if not os.path.exists(path) and os.path.basename(path).endswith((".zarr", ".n5")):
+        # check if path/to/zarr exists
+        return None
+    f = zarr.open(path, mode=mode)
+    ds_in_f = list_keys(f)
+    dict_of_img_arrays = {}
+    # this could be a problem if there are too many arrays and not enough RAM
+    # current test env: Samia's Sonoma Mac with 16gb RAM
+    for ds in ds_in_f:
+        # arrays are transposed since all other data convention seems to be in XYZ format
+        img_array = da.from_zarr(path, component=ds)
+        dict_of_img_arrays[ds] = img_array.rechunk(chunks='auto')
+
+    return dict_of_img_arrays
+
+
 def load_image_pil(path: Path) -> ndarray:
     """Load image as ndarray into RAM"""
     paths_list = get_files(path)
+    print(paths_list)
     imread = lambda fname: np.array(Image.open(fname))
-    sample = imread(paths_list[0])
+    try:
+        sample = imread(paths_list[0])
+    except:
+        return load_image_tifffile(path)
 
-    img_array = np.zeros((sample.shape[0],sample.shape[1],len(paths_list)), dtype=sample.dtype)
+    img_array = np.zeros((sample.shape[0], sample.shape[1], len(paths_list)), dtype=sample.dtype)
     for z, img_path in enumerate(paths_list):
         img_array[..., z] = np.array(Image.open(img_path))
+    return img_array
+
+
+def load_image_tifffile(path: Path) -> ndarray:
+    """Load image as ndarray into RAM"""
+    paths_list = get_files(path)
+    # if it is a tiff then tifffile should be able to read it!
+    imread = lambda fname: np.array(tifffile.imread(fname))
+    sample = imread(paths_list[0])
+    img_array = np.zeros((sample.shape[0], sample.shape[1], len(paths_list)), dtype=sample.dtype)
+    for z, img_path in enumerate(paths_list):
+        img_array[..., z] = np.array(tifffile.imread(img_path))
     return img_array
 
 
@@ -52,11 +124,28 @@ def load_image_lazy(path: Path) -> ndarray:
 def load_array_lazy(path: Path):
     """Lazy array load with dask"""
     mask = np.load(path, mmap_mode="r")
-    imread = lambda z: mask[...,z]
+    imread = lambda z: mask[..., z]
     sample = imread(0)
 
     lazy_imread = delayed(imread)  # lazy reader
     lazy_arrays = [lazy_imread(z) for z in range(mask.shape[2])]
+    dask_arrays = [
+        da.from_delayed(delayed_reader, shape=sample.shape, dtype=sample.dtype)
+        for delayed_reader in lazy_arrays
+    ]
+    return da.stack(dask_arrays, axis=-1)
+
+
+def load_zarr_lazy(zarr_array):
+    """Lazy array load with dask from Zarr array.
+     Test date: Feb 2, 2024
+     This can be incredibly slow"""
+    imread = lambda z: zarr_array[..., z]  # indexing is zyx here????
+    sample = imread(0)
+
+    lazy_reader = delayed(imread)
+    lazy_arrays = [lazy_reader(z) for z in range(zarr_array.shape[2])]
+
     dask_arrays = [
         da.from_delayed(delayed_reader, shape=sample.shape, dtype=sample.dtype)
         for delayed_reader in lazy_arrays
@@ -110,7 +199,9 @@ def print_information(operation: Optional[str] = None, print_errors: bool = True
                     print(f"!!!Error occurred in {func.__name__}()!!!")
                     print(traceback.format_exc())
                     raise
+
         return wrapper
+
     return deco
 
 
@@ -180,7 +271,7 @@ def mask_cells(label_img: ndarray, mask: ndarray, ratio_mask: float) -> ndarray:
     index = index[index != 0]
     ratio = np.array(ndi.mean(mask, labels=label_img, index=index))
 
-    mask_idx = np.arange(index[-1]+1, dtype=label_img.dtype)
+    mask_idx = np.arange(index[-1] + 1, dtype=label_img.dtype)
     idx_mask = list(np.where(ratio <= ratio_mask)[0])
     for idx in idx_mask:
         mask_idx[index[idx]] = 0
