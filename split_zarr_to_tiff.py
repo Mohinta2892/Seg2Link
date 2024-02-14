@@ -74,8 +74,8 @@ def _split(zarr_array, output_folder, ds):
 
 
 if __name__ == '__main__':
-    # Example usage
+    # Example usage:  please use '\' separator for windows paths and '/' for mac and linux paths
     zarr_path = r'C:\Users\Samia Mohinta\Documents\data\crop_A1_z16655-17216_y13231-13903_x7650-8468.zarr'
     output_folder = r'C:\Users\Samia Mohinta\Documents\data\crop_A1_z16655-17216_y13231-13903_x7650-8468'
-    seg_ds = r"volumes\segmentation_055"
+    seg_ds = r"volumes\segmentation_055" 
     split_zarr_and_save_tiffs(zarr_path, output_folder, seg_ds)
