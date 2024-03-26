@@ -36,7 +36,7 @@ conda activate seg2link-env
 ```
 - Install seg2link:
 ```console
-pip install seg2link
+pip install git+https://github.com/Mohinta2892/Seg2Link.git
 ```
 - Update to the latest version:
 ```console
