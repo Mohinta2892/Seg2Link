@@ -34,14 +34,15 @@ These predictions can conveniently be generated using [Seg2linkUnet2d](https://g
 conda create -n seg2link-env python=3.8 pip
 conda activate seg2link-env
 ```
-- Install seg2link:
+- Install seg2link from this repository:
 ```console
 pip install git+https://github.com/Mohinta2892/Seg2Link.git
 ```
-- Update to the latest version:
+Editable install:
 ```console
-pip install --upgrade seg2link
+pip install -e git+https://github.com/Mohinta2892/Seg2Link.git#egg=Seg2Link
 ```
+
 
 ## Use the software
 - Activate the created environment by:
