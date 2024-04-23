@@ -14,27 +14,41 @@ import argparse
 
 def slice_segmentations(seg, slices):
     segm = np.load(seg, mmap_mode='r')
+
+    segm = segm.transpose((2, 0, 1))
+
     original_shape = segm.shape
     print(f"Shape of original segmentation: {original_shape}")
 
     # print(f"Uniques in segm: {np.unique(segm)}")
-    segm = segm[slices]
+    segc = segm[slices]
 
-    print(f"Shape of cropped segmentation: {segm.shape}")
+    print(f"Shape of cropped segmentation: {segc.shape}")
 
-    output_folder = f"{os.path.dirname(seg)}/tiffs"
+    # todo change it use only split.ext
+    output_folder = f"{os.path.dirname(seg)}/sliced_{os.path.splitext(os.path.basename(seg))[0]}_tiffs"
 
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    for z_index, slice in enumerate(range(segm.shape[2])):
+    # default z_index_range
+    z_index_range = []
+    # calculate the original indices of the seg file
+    if slices[0].start is not None and slices[0].stop is not None:
+        z_index_range = range(slices[0].start, slices[0].stop)
+    elif slices[0].start is not None and slices[0].stop is None:
+        # slices[0].start is negative
+        z_index_range = range(original_shape[0] + slices[0].start, original_shape[0])
+    elif slices[0].start is None and slices[0].stop is not None:
+        z_index_range = range(0, slices[0].stop)
+
+    for z_index, slice in enumerate(z_index_range):
         # Extract the Z slice
-        z_slice = segm[:, :, z_index]
+        z_slice = segc[z_index, ...]
         if z_slice.dtype not in [np.uint16, np.uint8]:
             z_slice = z_slice.astype(np.uint16)
 
-        # for 0 indexing deduct -1
-        tiff_filename = f"{output_folder}/slice_{original_shape[2]-z_index-1:04}.tiff"
+        tiff_filename = f"{output_folder}/slice_{(slice):04}.tiff"
         t.imwrite(str(tiff_filename), z_slice)
 
 
@@ -46,9 +60,10 @@ def none_or_int(value):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="This script extracts Z-slices from a corrected segmentation file saved"
-                                                 "from Seg2Link. If Start End slices are both provided as None, "
-                                                 " the script will return without making any changes.")
+    parser = argparse.ArgumentParser(
+        description="This script extracts Z-slices from a corrected segmentation file saved"
+                    "from Seg2Link. If Start End slices are both provided as None, "
+                    " the script will return without making any changes.")
     parser.add_argument('-f', help='Pass the corrected segmentation .npy file')
     parser.add_argument('-ss', type=none_or_int, default=None, help='Start slice for cropping. Default: None.'
                                                                     ' If `None`, we will use the end slice like `-:End`')
@@ -59,18 +74,19 @@ def main():
     if args.ss is None and args.es is None:
         raise Exception("You must provide values in `-ss` and/or `-es` to crop the segmentation file. No action taken!")
 
-    z_slice = slice(None)
+    z_slice = slice(args.ss, args.es)
     y_slice = slice(None)
     x_slice = slice(None)
 
-    slices = (x_slice, y_slice, z_slice)
+    slices = (z_slice, y_slice, x_slice)
 
     if args.ss is None:
         # last `end` slices
-        slices = (x_slice, y_slice, slice(-args.es, None))
+        slices = (slice(-args.es, None), x_slice, y_slice)
     if args.es is None:
         # first `start` slices
-        slices = (x_slice, y_slice, slice(None, args.ss))
+        slices = (slice(None, args.ss), x_slice, y_slice)
+
 
     slice_segmentations(seg=args.f, slices=slices)
 
