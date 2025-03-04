@@ -43,6 +43,10 @@ Editable install:
 pip install -e git+https://github.com/Mohinta2892/Seg2Link.git#egg=Seg2Link
 ```
 
+### SPLIT ZARRS TO TIFF/ SAVED SEG.NPY INTO SLICES
+Please use the scripts in [utils](https://github.com/Mohinta2892/Seg2Link/tree/master/utils) to either split your zarrs into tiffs. Seg2Link ingests tiffs only.
+You can also split your saved segmentations into tiffs and used them. Generally Seg2Link should be able load a `seg.npy` file back after saving.
+
 
 ## Use the software
 - Activate the created environment by:
