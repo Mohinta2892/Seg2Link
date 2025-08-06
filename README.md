@@ -22,7 +22,8 @@ These predictions can conveniently be generated using [Seg2linkUnet2d](https://g
 - **User-Friendly** -- Seg2Link not only auto-generates segmentation results but also allows for easy inspection and manual corrections through minimal mouse and keyboard interactions. It supports features like cell ordering, multiple-step undo and redo.
 
 - **Efficiency** -- Seg2Link is engineered for the rapid processing of large 3D images with billions of voxels.
-  
+
+**Enhancements listed under [CHANGELOG.md](./CHANGELOG.md)**
 ## Graphic Overview
 ![Introduction](docs/pics/Introduction.png)
 
